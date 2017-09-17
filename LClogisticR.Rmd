@@ -1,0 +1,441 @@
+---
+title: "Lending Club Analysis"
+author: "Subhash Talluri"
+date: "03/30/2017"
+output:
+  html_document:
+    theme: flatly
+    toc: yes
+    fig_width: 10
+    fig_height: 5
+  pdf_document:
+    toc: yes
+---
+
+This is an analysis of the Lending Club load data provided by Lending Club and covering the period from 2007 - 2015. The data is provided (without restriction?) and can be downloaded directly from Lending Club !here<url>.
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+options(scipen = 999, digits = 4, width = 80)
+
+library(knitr)
+library(dplyr)
+library(tidyverse)
+library(lubridate)
+library(ggplot2)
+library(readr)
+
+calc_loocv_rmse = function(model) {
+  sqrt(mean((resid(model) / (1 - hatvalues(model))) ^ 2))
+}
+
+
+
+maincol <- "steelblue3"
+secondarycol <- "tomato3"
+
+loandata <- read_csv("Loanfull.csv")
+
+
+dim(loandata)
+str(loandata)
+
+```
+
+Before we examine the data in depth, let's trim down the number of columns to make it a bit easier to work with.
+
+Not all of the columns in the dataset are going to be useful (and there are a LOT!), so let's just grab the set that looks most interesting for the initial loan decision. so let's also take some credit, and demographic information into account to see if those factors are significant predictors.
+
+``` {r select_columns}
+
+## select just a subset of columns from the dataset
+
+loandata <- loandata[,c("loan_status", "loan_amnt", "issue_d", "term", "int_rate", "installment",  "grade", "sub_grade","emp_title","emp_length","home_ownership","annual_inc","verification_status","desc","purpose","title","addr_state", "delinq_2yrs", "inq_last_6mths", "open_acc", "pub_rec", "revol_util", "dti", "total_acc", "earliest_cr_line", "mths_since_last_delinq")]
+
+```
+
+Next we'll do some transformations on the data, including the conversion of the text-style dates to something more usable, transformation of a few string variables into numerics, removing or recasting na's, and the creation of a few binary variables.
+
+
+``` {r transform_data}
+
+loandata2 <- loandata %>%
+  mutate(default = ifelse(loan_status=="Charged Off" | loan_status=="Default", 1, 0),
+         loan_status = ifelse(loan_status=="Charged Off" |
+                                loan_status=="Default", "Default", "Current"),
+         issue_d = mdy(issue_d),
+         earliest_cr_line = mdy(earliest_cr_line),
+         time_history = issue_d - earliest_cr_line,
+         revol_util = as.numeric(sub("%","", revol_util)), 
+         emp_listed = as.numeric(!is.na(emp_title) * 1),
+         empty_descr = as.numeric(is.na(desc)), 
+         emp_na = ifelse(emp_length == "n/a", 1, 0),
+         emp_length = ifelse(emp_length == "< 1 year" | emp_length == "n/a", 0, emp_length),
+         emp_length = as.numeric(gsub("\\D", "", emp_length)),
+         delinq_ever = as.numeric(!is.na(mths_since_last_delinq)),   
+         home_ownership = ifelse(home_ownership == "NONE", "OTHER", home_ownership),
+         int_rate = as.numeric(sub("%","",int_rate))) %>%  
+  select(default, loan_amnt, empty_descr, emp_listed, emp_na, emp_length, verification_status, home_ownership, annual_inc, purpose, time_history, issue_d, term, int_rate, installment, grade, loan_status, sub_grade, addr_state, inq_last_6mths, open_acc, pub_rec, revol_util, dti, total_acc, delinq_2yrs, delinq_ever)
+
+```
+
+New variables are:
+
+-- `default` (binary): indicates whether the loan is in default; takes a value of `1` for any `loan_status=="Charged Off"` or `loan_status=="Default"` and `0` for any other `loan_status`
+
+-- `time_history` (numeric): length of time (in days) between the borrower's `earliest_cr_line` and the `issue_d` of the loan
+
+-- `emp_listed` (binary): indicates whether the borrower provided employment information; take a value of `0` if `emp_title` is `na` and `1` otherwise
+
+-- `empty_descr` (binary): indicates whether the desc field is filled in; takes a value of `1` if `desc` is `na` and `0` otherwise
+
+-- `emp_na` (binary): indicates whether the borrower provided an employment length; takes a value of `1` if `emp_length` is `"n/a"` and `0` otherwise  
+
+-- `delinq_ever` (binary): indicates whether the borrower has had any delinquencies; takes a value of `0` if `mths_since_last_delinq` is `na` and `1` otherwise
+
+Now that we have a subset of the most interesting columns selected, let's return to looking for anomolies.
+
+``` {r lookforanomalies}
+
+summary(loandata2)
+
+```
+
+A few of the columns we're interested have NA's. Let's clean them up.
+
+``` {r removenulls2}
+
+#loandata2 <- loandata2[!is.na(loandata2$annual_inc),]
+loandata2 <- loandata2[complete.cases(loandata2),]
+
+```
+
+We also see some negative values in the `time_history` column. That doesn't make sense... it means that `earliest_cr_line` is some time in the future. When we look into it further it looks like bad data: dates that should be like 19xx coming through as 20xx. For simplicity, let's just add 36,500 days (100 years, give or take) to the negative `time_history`s.
+
+``` {r negtime}
+
+loandata2[loandata2$time_history < 0,]$time_history <- loandata2[loandata2$time_history <  0, ]$time_history + 36500
+
+```
+
+Now, let's poke around in the clean subset of data to see what types of values we're looking at.
+
+``` {r explore_1, fig.width=10, fig.height=8}
+
+#detach(package:plyr)
+
+## what was the average loan amount
+mean(loandata2$loan_amnt)
+
+## what was the range
+range(loandata2$loan_amnt)
+
+## how does it vary by year
+
+tot_amnt_df <- loandata2 %>% 
+  select(issue_d, loan_amnt) %>% 
+  group_by(issue_d) %>% 
+  summarise(Amount = as.numeric(sum(loan_amnt)))
+
+ts_amnt <- ggplot(tot_amnt_df, aes(x = issue_d, y = Amount))
+
+ts_amnt + geom_line(col=maincol) + xlab("Date issued")
+
+## average loan_amnt by year
+
+mean_amnt_df <- loandata2 %>% 
+  select(issue_d, loan_amnt) %>% 
+  group_by(issue_d) %>% 
+  summarise(Amount = as.numeric(mean(loan_amnt)))
+
+ts_amnt <- ggplot(mean_amnt_df, aes(x = issue_d, y = Amount))
+
+ts_amnt + geom_line(col=secondarycol) + xlab("Date issued")
+
+## how loans with different grades have changed over time
+
+amnt_df_grade <- loandata2 %>% 
+  select(issue_d, loan_amnt, grade) %>% 
+  group_by(issue_d, grade) %>% 
+  summarise(Amount = sum(as.numeric(loan_amnt)))
+
+ts_amnt_grade <- ggplot(amnt_df_grade, aes(x = issue_d, y = Amount))
+ts_amnt_grade + geom_area(aes(fill=grade)) + xlab("Date Issued") + ylab("Amount") 
+
+## how loans with different statuses have changed over time (default vs. non-default)
+
+amnt_df_status <- loandata2 %>% 
+  select(issue_d, loan_amnt, loan_status) %>% 
+  group_by(issue_d, loan_status) %>% 
+  summarise(Amount = sum(as.numeric(loan_amnt)))
+
+ts_amnt_status <- ggplot(amnt_df_status, aes(x = issue_d, y = Amount))
+ts_amnt_status + geom_area(aes(fill=loan_status)) +
+  xlab("Date Issued") + ylab("Amount")
+
+```
+
+What is the overall distribution of loans by loan amount?
+
+``` {r distloanamnt, fig.width=10, fig.height=8}
+
+ggplot(loandata2, aes(x=loan_amnt)) +
+  geom_density() +
+  labs(x="Amount", y="Density", title="Overall Distribution of Loan Amounts") +
+  geom_vline(aes(xintercept=mean(loan_amnt)), linetype="dashed") 
+
+```
+
+It appears that highest number of loans are centered around $10k range, with a mean around $15k. This data has a bit of 'hilliness' around loans of certain round values. Seems that people tend to prefer to borrow $5k or $10k or even $12.5k vs. $11,575, for example.
+
+``` {r oddnumberloans}
+
+## how many loans are $5k
+count(loandata2[loandata2$loan_amnt==5000,])
+
+## how many loans are $7.5k
+count(loandata2[loandata2$loan_amnt==7500,])
+
+## how many loans are $10k
+count(loandata2[loandata2$loan_amnt==10000,])
+
+## how many loans are $12.5k
+count(loandata2[loandata2$loan_amnt==12500,])
+
+## how many loans are between 12.5 and 15k
+count(loandata2[loandata2$loan_amnt > 12500 & loandata2$loan_amnt < 15000,])
+
+```
+
+What is the distribution of loan amounts by loan default status?
+
+``` {r distloanamntstat, fig.width=10, fig.height=8}
+
+## mean of all loans in default
+mean_default <- mean(loandata2[loandata2$default==1,]$loan_amnt)
+
+## and not in default
+
+mean_nondefault <- mean(loandata2[loandata2$default==0,]$loan_amnt)
+
+ggplot(loandata2, aes(x=loan_amnt, color=loan_status)) +
+  geom_density() +
+  labs(x="Amount", y="Density", title="Dist of Loan Amounts") +
+  geom_vline(aes(xintercept=mean_default), col="darkcyan") +
+  geom_vline(aes(xintercept=mean_nondefault), col="red")
+
+```
+
+Distribution of loan amounts split out by whether or not the loan is in default doesn't give much insight. Loans that are not in default appear to have a bit more 'hilliness' in the amounts, but they follow similar distributions.
+
+What is the distribution of loan amounts by grade?
+
+``` {r distamntgrade, fig.width=10, fig.height=8}
+
+mean_A <- mean(loandata2[loandata2$grade=="A",]$loan_amnt)
+mean_B <- mean(loandata2[loandata2$grade=="B",]$loan_amnt)
+mean_C <- mean(loandata2[loandata2$grade=="C",]$loan_amnt)
+mean_D <- mean(loandata2[loandata2$grade=="D",]$loan_amnt)
+mean_E <- mean(loandata2[loandata2$grade=="E",]$loan_amnt)
+mean_F <- mean(loandata2[loandata2$grade=="F",]$loan_amnt)
+mean_G <- mean(loandata2[loandata2$grade=="G",]$loan_amnt)
+
+ggplot(loandata2, aes(x=loan_amnt, color=grade)) +
+  geom_density() +
+  labs(x="Amount", y="Density", title="Dist of Loan Amounts by Grade") +
+  geom_vline(aes(xintercept=mean_A), col="tomato") +
+  geom_vline(aes(xintercept=mean_B), col="goldenrod") +
+  geom_vline(aes(xintercept=mean_C), col="springgreen") +
+  geom_vline(aes(xintercept=mean_D), col="cyan") +
+  geom_vline(aes(xintercept=mean_E), col="steelblue") +
+  geom_vline(aes(xintercept=mean_F), col="purple") +
+  geom_vline(aes(xintercept=mean_G), col="magenta")
+
+
+```
+
+This plot looks similar to the overall distribution, but we can see that there is an interesting mound of grade F and G loans between $20-25k, as well as a spike of grade A loans around $10k).
+
+Grades A, B, C, & D seem to follow very similar distributions, and grades E, F, & G likewise follow similar distributions. We might be able to recategorize these into 2 or 3 supergrade categories without losing much. Let's facet them out and see what each grade looks like separately.
+
+``` {r}
+ggplot(loandata2, aes(x=loan_amnt, color=sub_grade)) +
+  geom_density() +
+  labs(x="Amount", y="Density", title="Dist of Loan Amounts by Grade/SubGrade") +
+  facet_wrap(~grade) #+
+  #scale_colour_manual(values=cbPalette)
+
+```
+
+Lower grade loans might have a higher number of defaults. Let's take a look at the distribution of loan defaults by grade.
+
+``` {r distdefaultgrade, fig.width=10, fig.height=8}
+
+ggplot(loandata2, aes(x=loan_amnt, color=grade)) +
+  geom_density() + facet_grid(~ loan_status)
+
+```
+
+Not much insight there. The distributions of loans that are in default is smoother, interestingly, without the 'spikiness' of loans that are current or paid in full. Perhaps there is a correlation between loans for 'odd' amounts (e.g. $5125, $6375) and successful repayment.
+
+How about distributions of amounts by loan term?
+
+``` {r distamntterm, fig.width=10, fig.height=8}
+
+ggplot(loandata2, aes(x=loan_amnt, color=term)) +
+  geom_density() +
+  labs(x="Amount", y="Density", title="Dist of Loan Amounts by Term") 
+
+```
+
+As might be expected, we can see that 36-month terms are more common for smaller loan amounts, and almost non-existent for loans over roughly $27.5k. The 36-month term is also spikier for some reason.
+
+Let's see loan amounts vs. annual income.
+
+``` {r distamntgrade2, fig.width=10, fig.height=8}
+
+ggplot(loandata2, aes(x=loan_amnt, y=annual_inc, color=loan_status, shape=loan_status)) +
+  geom_point(alpha=0.5, size=3) + facet_grid(~loan_status) +
+  labs(x="Amount", y="Income", title="Loan Amount vs. Annual Income") 
+
+```
+
+Looks like there is quite a bit of variation in the annual incomes of people applying for all different loan amounts. There's also quite a few observations that appear to be outside the plausible range. How many people with an annual income of $9.5mil are applying for $24k loans on a peer-lending platform? There look to be some patterns in specific income verticals though. Let's zoom in a bit.
+
+``` {r zoomincome, fig.width=10, fig.height=8}
+
+ggplot(loandata2, aes(x=loan_amnt, y=annual_inc, color=loan_status, shape=loan_status)) +
+  geom_point(alpha=0.5, size=3) + facet_grid(~loan_status) +
+  labs(x="Amount", y="Income", title="Loan Amount vs. Annual Income") + ylim(0,1500000) 
+
+```
+
+``` {r top5annual}
+
+annual_inc_default <- loandata2[loandata2$default==1,]$annual_inc
+annual_inc_current <- loandata2[loandata2$default==0,]$annual_inc
+
+summary(annual_inc_default)
+sd(annual_inc_default)
+
+summary(annual_inc_current)
+sd(annual_inc_current)
+
+```
+
+What does the distribution of annual income by grade look like?
+
+``` {r annincbygrade, fig.width=10, fig.height=8}
+
+ggplot(loandata2, aes(x=annual_inc, color=sub_grade)) +
+  geom_density() +
+  labs(x="Amount", y="Density", title="Dist of Loan Amounts by Grade/SubGrade") + xlim(0,250000) +
+  facet_wrap(~grade) 
+
+```
+
+---
+
+We've discovered some interesting information about the data, and looked at how various combinations appear when plotted.
+
+---
+
+Finally, we can use the `model.matrix` function for R to model our dataset as a matrix with dummy variables for each factor. For this case we're only going to look at a handful of the variables in the entire set.
+
+``` {r modelmatrix}
+
+ldsubset <- loandata2 %>%
+  select(default, loan_amnt, empty_descr, emp_listed, emp_na, emp_length, verification_status, home_ownership, annual_inc, purpose, time_history, inq_last_6mths, open_acc, pub_rec, total_acc, delinq_2yrs, delinq_ever)
+
+ld2mm <- as.data.frame(model.matrix(~ ., data = ldsubset))[, -1]
+str(ld2mm)
+
+```
+
+Now that we have a data frame constructed as a model matrix with categoricals assigned as numericals with dummy variables, we can attempt to model a logistic regression to predict our response variable of interest `default`.
+
+The data we have is pretty large, so we'll begin by selecting a sampling of 100,000 rows as a training data set.
+
+``` {r traintest}
+
+index <- sample(1:nrow(ld2mm), 25000, replace=FALSE)
+
+ld2mm_train <- ld2mm[index,]
+ld2mm_test <- ld2mm[-index,]
+
+
+```
+
+And then we'll fit a logistic regression model to the `default` variable.
+
+``` {r logit}
+
+ld2mm_glm_null <- glm(default ~ 1, data=ld2mm_train, family=binomial)
+summary(ld2mm_glm <- glm(default ~ ., data=ld2mm_train, family=binomial))
+
+
+anova(ld2mm_glm_null, ld2mm_glm, test="Chisq")
+
+
+```
+
+The $\chi^2$ statistic indicates we should reject the null hypothesis. The logistic regression model fits better than the null model.
+
+We'll try to reduce the model using stepwise AIC testing.
+
+``` {r stepback}
+
+ld2mm_glm_step_back <- step(ld2mm_glm, direction="backward", trace=0)
+
+anova(ld2mm_glm, ld2mm_glm_step_back, test="Chisq")
+
+calc_loocv_rmse(ld2mm_glm)
+calc_loocv_rmse(ld2mm_glm_step_back)
+
+```
+
+In this case, significance of the regression test, with a large $\chi^2$ value leads us to accept the null. The larger logistic model does predict better than the smaller. The LOOCV RMSE for the smaller model is slightly smaller, however.
+
+``` {r testdata}
+
+
+# fitting models to the test data.
+
+test_ld2mm_glm_null <- glm(default ~ ., data=ld2mm_test, family=binomial)
+
+summary(test_ld2mm_glm_step_back <- glm(default ~
+                                          loan_amnt +
+                                          empty_descr +
+                                          `verification_statusSource Verified` + 
+                                          verification_statusVerified +
+                                          home_ownershipMORTGAGE + 
+                                          home_ownershipOWN + 
+                                          annual_inc +
+                                          purposecredit_card +
+                                          purposeeducational + 
+                                          purposemedical +
+                                          purposemoving +
+                                          purposeother +
+                                          purposesmall_business +
+                                          purposevacation +
+                                          time_history +
+                                          inq_last_6mths +
+                                          open_acc +
+                                          pub_rec, data=ld2mm_test, family=binomial))
+
+coef(test_ld2mm_glm_step_back)
+anova(test_ld2mm_glm_step_back, test="Chisq")
+
+summary(test_ld2mm_glm <- glm(default ~ ., data=ld2mm_test, family=binomial))
+
+coef(test_ld2mm_glm)
+anova(test_ld2mm_glm, test="Chisq")
+
+# significance testing
+anova(test_ld2mm_glm_null, test_ld2mm_glm, test="Chisq")
+anova(test_ld2mm_glm, test_ld2mm_glm_step_back, test="Chisq")
+
+calc_loocv_rmse(test_ld2mm_glm)
+calc_loocv_rmse(test_ld2mm_glm_step_back)
+
+```
