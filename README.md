@@ -89,4 +89,42 @@ The United States is one of the best countries to borrow
 money from, even if the methodology of using credit score is
 no the optimal method to do so. That is because, in
 comparison, other countries have no method at all for
-calculating borrower risk. Countries like Brazil can charge
+calculating borrower risk. Countries like Brazil can charge 
+upwards of 70% (Brazil Bank Lending Rates, 2017) as interest
+rates for personal and business loans due to the inability to
+properly access credit risk. Our model is extensible to work in
+any country since it does not rely on a specifically calculated
+credit score but rather data available to the public in almost
+every country such as home prices, treasury bill rates,
+unemployment rates etc. Since this model can use this public
+data to access borrower risk, banks can dramatically reduce
+uncertainty premium of loan interest rates and provide more
+accessible funds to people.
+
+## CHALLENGES
+
+The main challenge that we faced is in finding datasets that
+are detailed and free. Several of the datasets that we originally
+thought we could use were in fact either premium datasets or
+not as detailed as we would have liked (for e.g. annual data vs.
+country level data). Since we couldn’t find several of the
+datasets we hypothesized would exponentially increase the
+quality of predicting borrower risk (for e.g. county crime data),
+we had to rework our premise from being that we can predict
+“true risk” to the premise that we can improve the current risk
+prediction models.
+
+Furthermore, due to the Equal Credit Opportunity Act of
+1974 (Fair Lending n.d.), all underwriting models in the
+United States have to be able to dictate the top 3 reasons why a
+loan was rejected/approved. This allows for the government to
+validate that a loan was not rejected on the premises of race,
+age, ethnicity, sex, sexual orientation etc. Though this law is
+great for consumers, it does inhibit the ability for modern
+underwriting systems based on Neural Networks, Random
+Forests, Clustering Algorithms etc to be used as underwriting
+systems since it is extremely difficult to be able to dictate the
+features that led to a loan being labeled as being charged-off in
+the future vs. not. This limitation dramatically decreases the
+types of machine-learning techniques we can use to build
+underwriting models. 
