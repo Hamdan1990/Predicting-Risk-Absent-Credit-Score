@@ -128,3 +128,94 @@ features that led to a loan being labeled as being charged-off in
 the future vs. not. This limitation dramatically decreases the
 types of machine-learning techniques we can use to build
 underwriting models. 
+
+## METHODS
+
+Lending Club is an online marketplace for peer-to-peer
+lending that connects borrowers and investors. Their platform
+enables borrowers to access loans through a fast and easy
+online or mobile interface. Investors provide the capital to
+enable many of the loans in exchange for earning interest.
+Data provided by Lending Club consists of attributes such
+as borrower annual income, loan interest rate, and borrowing
+habits. Data is broken down into sets by period. For each
+period, the data describes a list of all loans issued, including
+current loan status (Current, Late, Fully Paid, etc.) and latest
+payment information. The data set contains Lending Club’s
+loan data from 2007-2015. It has a total of 887,379
+observations of 74 variables.
+
+### Data Creation
+
+Loan data is retrieved from Lending Club for each of the
+four financial quarters from year 2007-2015. These files were
+combined together with the variables that were influential and
+relevant to the project at hand (Table I). 
+
+The following datasets were used to augment the Lending
+Club data:
+
+(1) Average Housing Prices for a zip code (from Zillow
+API)
+
+(2) Consumer Price Index (from St. Louis Federal Reserve
+Bank API). CPI Index tracks the average price of all goods in
+the US annually. It is also used to calculate inflation in the US.
+The hypothesis is that higher CPI means that goods are more
+expensive to buy and a person will have less money to pay for
+their loans and therefore have a higher chance of defaulting.
+
+(3) Unemployment Rate by state (from Bureau of Labor
+Statistics)
+
+(4) Historical 3-Month Treasury Bill Rates (from St Louis
+Federal Reserve Bank API). Treasury Bill Rates are cheapest
+interest rates in the US. They determine the interest rates of
+almost every loan a person gets. The hypothesis is that higher
+interest rates lead to higher default rates. We hope that these
+data sources can better predict borrower risk than Lending
+Club’s current modeling system.
+
+After reviewing the data, we decided to remove the
+variables ‘sub_grade”, ‘int_rate’, ‘fico_range_low’ and ‘fico_ra
+nge_high’ since they are both values created by Lending Club
+after their underwriting process, which is what this project is
+trying to replicate.
+
+| Variable Name  | Description           |
+| ------------- |:-------------:|
+|loan_amnt| Amount borrowed for loan|
+term |Length of the loan|
+emp_length| Length of the borrower’s currently
+employment|
+home_ownership| Length of the borrower’s home
+ownership|
+annual_inc| Annual Income of the borrower|
+verification_status| Boolean dictating whether the income of
+a borrower has been verified|
+loan_status| Boolean dictating whether the loan
+defaulted or not|
+zip_code| First three digits of the borrowers
+zipcode|
+addr_state| State of residence of the borrower|
+delinq_2yrs| Number of delinquencies the borrower
+has over the last two years|
+earliest_cr_line| Date of the earliest credit line of the
+borrower|
+inq_last_6mths| Number of inquiries into the borrower’s
+credit score in the last six month|
+mths_since_last_delinq| Number of months since the borrower’s
+last delinquency|
+mths_since_last_record| Number of months since the last activity
+on the borrower’s credit score|
+open_acc| Number of borrower’s open accounts|
+pub_rec| Number of borrowers’ derogatory public
+records|
+revol_bal| Number of borrower’s revolving
+accounts|
+revol_util| Amount of revolving account credit
+being used|
+total_acc| Total number of accounts held by the
+borrower|
+z_index| Home Price Index for the US from
+Zillow|
