@@ -1,6 +1,4 @@
-# Predicting-Risk-Absent-Credit-Score
-Predicting Borrower Risk using Lending Club’s loan
-data Augmented with Alternative Data
+# Predicting Borrower Risk using Lending Club’s loan data Augmented with Alternative Data
 
  The current US system of lending is not very good at assessing
 the risk of borrowers. It relies on a singular value known as a credit
@@ -15,7 +13,9 @@ augment existing dataset. Through the process of trial and error, a
 model with new attributes was found that show a better probability
 of predicting risk than Lending Club’s models.
 Keywords—lending club; loan; risk; borrower; default
-I. INTRODUCTION
+
+## INTRODUCTION
+
 The current US system of lending has some flaws. Mainly,
 it is not very good at assessing the risk of borrowers (look at
 the 2008 recession for example). Most major banks in the US
@@ -52,7 +52,9 @@ trial and error, we hope to find attributes about a borrower that
 predict better borrower risk, which can be used to give out
 better, low-interest loans to those who actually deserve it the
 most.
-II. RELATED WORK
+
+## RELATED WORK
+
 There has been lot of work done on Lending club loan data
 such as "Predicting borrowers chance of defaulting on credit
 loans" [3], "Predicting Probability of Loan Default" [4] and
@@ -69,7 +71,9 @@ price index at the time of borrowing and unemployment rates
 from the US bureau of Labor Statistics. Through this approach,
 we hope to show the true risk of a borrower without using
 credit score as an indicator of risk.
-III. INTELECTUAL MERIT
+
+## INTELECTUAL MERIT
+
 In the age of information, there are troves of data being
 collected about the United States and its people every single
 day. The difficulty in this project is to be able to discern the
@@ -79,7 +83,8 @@ causes for loan default as we did reading on analyzing the data.
 A purely computer science approach would not have factored
 in the nuances of the lending industry and the factors that
 impact it.
-IV. BROADER IMPACT
+
+## BROADER IMPACT
 The United States is one of the best countries to borrow
 money from, even if the methodology of using credit score is
 no the optimal method to do so. That is because, in
