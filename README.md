@@ -155,20 +155,20 @@ relevant to the project at hand (Table I).
 The following datasets were used to augment the Lending
 Club data:
 
-1 Average Housing Prices for a zip code (from Zillow
+1. Average Housing Prices for a zip code (from Zillow
 API)
 
-2 Consumer Price Index (from St. Louis Federal Reserve
+2. Consumer Price Index (from St. Louis Federal Reserve
 Bank API). CPI Index tracks the average price of all goods in
 the US annually. It is also used to calculate inflation in the US.
 The hypothesis is that higher CPI means that goods are more
 expensive to buy and a person will have less money to pay for
 their loans and therefore have a higher chance of defaulting.
 
-3 Unemployment Rate by state (from Bureau of Labor
+3. Unemployment Rate by state (from Bureau of Labor
 Statistics)
 
-4 Historical 3-Month Treasury Bill Rates (from St Louis
+4. Historical 3-Month Treasury Bill Rates (from St Louis
 Federal Reserve Bank API). Treasury Bill Rates are cheapest
 interest rates in the US. They determine the interest rates of
 almost every loan a person gets. The hypothesis is that higher
