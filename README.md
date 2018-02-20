@@ -186,36 +186,25 @@ trying to replicate.
 | ------------- |:-------------:|
 |loan_amnt| Amount borrowed for loan|
 term |Length of the loan|
-emp_length| Length of the borrower’s currently
-employment|
-home_ownership| Length of the borrower’s home
-ownership|
+emp_length| Length of the borrower’s current employment|
+home_ownership| Length of the borrower’s home ownership|
 annual_inc| Annual Income of the borrower|
-verification_status| Boolean dictating whether the income of
-a borrower has been verified|
-loan_status| Boolean dictating whether the loan
-defaulted or not|
-zip_code| First three digits of the borrowers
-zipcode|
+verification_status| Boolean dictating whether the income of a borrower has been verified|
+loan_status| Boolean dictating whether the loan defaulted or not|
+zip_code| First three digits of the borrowers zipcode|
 addr_state| State of residence of the borrower|
-delinq_2yrs| Number of delinquencies the borrower
-has over the last two years|
-earliest_cr_line| Date of the earliest credit line of the
-borrower|
-inq_last_6mths| Number of inquiries into the borrower’s
-credit score in the last six month|
-mths_since_last_delinq| Number of months since the borrower’s
-last delinquency|
-mths_since_last_record| Number of months since the last activity
-on the borrower’s credit score|
+delinq_2yrs| Number of delinquencies the borrower has over the last two years|
+earliest_cr_line| Date of the earliest credit line of the borrower|
+inq_last_6mths| Number of inquiries into the borrower’s credit score in the last six month|
+mths_since_last_delinq| Number of months since the borrower’s last delinquency|
+mths_since_last_record| Number of months since the last activity on the borrower’s credit score|
 open_acc| Number of borrower’s open accounts|
-pub_rec| Number of borrowers’ derogatory public
-records|
-revol_bal| Number of borrower’s revolving
-accounts|
-revol_util| Amount of revolving account credit
-being used|
-total_acc| Total number of accounts held by the
-borrower|
-z_index| Home Price Index for the US from
-Zillow|
+pub_rec| Number of borrowers’ derogatory public records|
+revol_bal| Number of borrower’s revolving accounts|
+revol_util| Amount of revolving account credit being used|
+total_acc| Total number of accounts held by the borrower|
+z_index| Home Price Index for the US from Zillow|
+cpi| Consumer Price Index of the US|
+3_month_treasury| 3-Month Treasury Bill Rates in the US|
+unemployment_rate| Unemployment rate in the state of residence of the borrower| 
+
