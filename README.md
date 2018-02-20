@@ -245,7 +245,6 @@ data.
 
 | MODEL TYPE  | ACCURACIES      |
 | ------------- |:-------------:|
-
 LendingClub (Base)| 86.13%|
 Logistic Regression| 86.16%|
 Naïve Bayes (Gaussian)| 85.44%|
