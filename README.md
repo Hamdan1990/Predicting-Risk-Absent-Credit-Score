@@ -246,7 +246,7 @@ data.
 | MODEL TYPE  | ACCURACIES      |
 | ------------- |:-------------:|
 LendingClub (Base)| 86.13%|
-Logistic Regression| 86.16%|
+**Logistic Regression| 86.16%|**
 Naïve Bayes (Gaussian)| 85.44%|
 Naïve Bayes (Multinomial)| 60.13%|
 Naïve Bayes (Bernoulli)| 86.16%|
@@ -255,13 +255,13 @@ Naïve Bayes (Bernoulli)| 86.16%|
 
 | MODEL TYPE  | ACCURACIES      |
 | ------------- |:-------------:|
-z_index| 1.06628185161e-05
+**z_index| 1.06628185161e-05**
 loan_amnt| 1.3251799826e-07
 revol_bal| 1.31596786693e-07
 annual_inc| 7.93945301355e-08
 cpi| 3.63177034105e-08
 revol_util| 1.51111414715e-08
-unemployment_rate| 3.60462022742e-09
+**unemployment_rate| 3.60462022742e-09**
 mths_since_last_record| 3.30176986866e-09
 total_acc| 2.10427712198e-09
 mths_since_last_delinq| 2.05043732339e-09
@@ -275,6 +275,38 @@ MORTGAGE| 9.92736794805e-11
 pub_rec| 9.26893127116e-11
 delinq_2yrs| 6.9798923711e-11
 OWN| 2.1936707264e-11
-3_month_treasury| 1.45612245884e-11
+**3_month_treasury| 1.45612245884e-11**
 OTHER| 6.93504761739e-13
 NONE| 5.00962255994e-13 
+
+## EVALUTION
+
+From the comparison of the models we could use, the best
+was the Logistic Regression model. It yielded an accuracy
+rating of 86.16%. We assume that the Logistic Regression
+model fit best since around half of the data did not fit a
+Gaussian distribution (home_index, loan_amount etc) and 
+therefore were harder to predict using those models. This
+accuracy of 86.16 is slightly higher than the default risk
+calculated by the LendingClub model of 86.13% (based on
+actual default rate that LendingClub experienced from the
+years of 2007 – 2015).
+
+Since we chose Logistic Regression, we can find the most
+impactful variables that accounted for the prediction of loan
+defaults (Table III). As shown, the newly created variables of
+‘z_index’, ‘cpi’, and ‘unemployment_rate’ rank amongst the
+top 10 factors that accounted for loan defaults, out of the total
+25 factors, with ‘z_index’ (The Home Price Index of the US
+from Zillow) topping the list of most important features.
+‘3_month_treasury’ did not have much of an effect on the data
+as we had originally thought. 
+
+## CONCLUSION
+
+Though we removed FICO credit scores, LendingClub loan
+grades and interest rates from the provided data, our dataset
+consisting of other variables plus newly created variables of
+‘z_index’, ‘cpi’, ‘unemployment_rate’ and ‘3_month_treasury’
+from publicly available data sources could predict loan default
+rate as well as the LendingClub underwriting models could. 
