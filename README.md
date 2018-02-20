@@ -250,3 +250,31 @@ Logistic Regression| 86.16%|
 Naïve Bayes (Gaussian)| 85.44%|
 Naïve Bayes (Multinomial)| 60.13%|
 Naïve Bayes (Bernoulli)| 86.16%|
+
+#### TABLE III. LOGISTIC REGRESSION FEATURES
+
+| MODEL TYPE  | ACCURACIES      |
+| ------------- |:-------------:|
+z_index| 1.06628185161e-05
+loan_amnt| 1.3251799826e-07
+revol_bal| 1.31596786693e-07
+annual_inc| 7.93945301355e-08
+cpi| 3.63177034105e-08
+revol_util| 1.51111414715e-08
+unemployment_rate| 3.60462022742e-09
+mths_since_last_record| 3.30176986866e-09
+total_acc| 2.10427712198e-09
+mths_since_last_delinq| 2.05043732339e-09
+new_emp_length| 1.02910445539e-09
+inq_last_6mths| 3.34900616867e-10
+Verified| 2.71306003743e-10
+open_acc| 1.59476488517e-10
+Source Verified| 1.28189020382e-10
+RENT| 1.0164943106e-10
+MORTGAGE| 9.92736794805e-11
+pub_rec| 9.26893127116e-11
+delinq_2yrs| 6.9798923711e-11
+OWN| 2.1936707264e-11
+3_month_treasury| 1.45612245884e-11
+OTHER| 6.93504761739e-13
+NONE| 5.00962255994e-13 
