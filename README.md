@@ -182,6 +182,8 @@ nge_high’ since they are both values created by Lending Club
 after their underwriting process, which is what this project is
 trying to replicate.
 
+#### TABLE I. Description of Loan Data Variables
+
 | Variable Name  | Description           |
 | ------------- |:-------------:|
 |loan_amnt| Amount borrowed for loan|
@@ -221,3 +223,28 @@ transformations of a few string variables into numerics,
 removing or recasting na’s, and the creation of a few binary
 variables. 
 
+### Data Modeling
+
+Due to the limitations described in the “Challenges”
+section, we are left with mainly using Logistic Regression and
+Naïve Bayes as our primary methodologies of modeling, since
+they are able to dictate how much each factor affects the final
+result.
+
+The models were built on the cleaned data that we formed
+with “default_risk” as the response variable and the other
+variables set as the predictor variables. To ensure that our
+models were not over-fitting, we cross validated by creating
+training data using 80% of randomly chosen rows from the
+original data frame and the rest of the 20% of rows set as test
+data. 
+
+### RESULT
+
+#### TABLE II. MODEL ACCURACIES
+Model Type| Accuracy|
+LendingClub (Base)| 86.13%|
+Logistic Regression| 86.16%|
+Naïve Bayes (Gaussian)| 85.44%|
+Naïve Bayes (Multinomial)| 60.13%|
+Naïve Bayes (Bernoulli)| 86.16%|
